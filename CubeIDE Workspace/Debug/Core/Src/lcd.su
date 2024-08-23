@@ -1,0 +1,13 @@
+../Core/Src/lcd.c:24:6:delay_us	24	static,ignoring_inline_asm
+../Core/Src/lcd.c:33:13:lcd_enablePulse	8	static
+../Core/Src/lcd.c:43:13:lcd_write	24	static
+../Core/Src/lcd.c:63:13:lcd_writeCmd	16	static
+../Core/Src/lcd.c:71:13:lcd_writeData	16	static
+../Core/Src/lcd.c:79:13:lcd_write4	16	static
+../Core/Src/lcd.c:92:6:lcd_Init	24	static
+../Core/Src/lcd.c:121:6:lcd_writeCommand	16	static
+../Core/Src/lcd.c:129:6:lcd_gotoxy	16	static
+../Core/Src/lcd.c:140:6:lcd_clear	8	static
+../Core/Src/lcd.c:147:6:lcd_printf	48	static
+../Core/Src/lcd.c:174:6:lcd_create	24	static
+../Core/Src/lcd.c:186:6:lcd_putc	16	static
