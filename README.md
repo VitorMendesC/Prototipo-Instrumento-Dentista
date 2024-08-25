@@ -73,126 +73,125 @@ Toda a lógica necesária para implementar cada um dos requisitos pode ser vista
 Abaixo é exibido somente o loop de controle presente na main sem comentários para melhorar visualização.
 
 ```
-while (1)
-  {
-	  current_time = HAL_GetTick();
-	  HAL_ADC_Start(&hadc1);
-	  HAL_ADC_PollForConversion(&hadc1, 20);	
-	  ADC_atual = HAL_ADC_GetValue(&hadc1);	
+while (1){
+  current_time = HAL_GetTick();
+  HAL_ADC_Start(&hadc1);
+  HAL_ADC_PollForConversion(&hadc1, 20);	
+  ADC_atual = HAL_ADC_GetValue(&hadc1);	
 
-	  RPM = ticks*TIM4_FREQ*60/(PPR*0.6);
+  RPM = ticks*TIM4_FREQ*60/(PPR*0.6);
 
-	  if(RPM < RPM_LOW_THR && !motor_low_speed_flag){
-		  motor_low_speed_flag = 1;					
-		  last_time_RPM = current_time;				
+  if(RPM < RPM_LOW_THR && !motor_low_speed_flag){
+	  motor_low_speed_flag = 1;					
+	  last_time_RPM = current_time;				
+  }
+
+  if(current_time - last_time_RPM > RPM_TIME_DELAY && motor_low_speed_flag){
+	  if(RPM < RPM_LOW_THR){
+		  safety_flag = 1;
+		  motor_lock_flag = 1;						
+	  }												
+	  else{
+		  motor_low_speed_flag = 0;				
 	  }
+  }
 
-	  if(current_time - last_time_RPM > RPM_TIME_DELAY && motor_low_speed_flag){
-		  if(RPM < RPM_LOW_THR){
-			  safety_flag = 1;
-			  motor_lock_flag = 1;						
-		  }												
-		  else{
-			  motor_low_speed_flag = 0;				
-		  }
+  if(current_time - last_time_ADC > ADC_TIME_DELAY){
+	  if((int) (abs(ADC_atual - ADC_anterior)) > MAX_ADC_VARIATION){
+		  safety_flag = 1;
+		  fast_movment_flag = 1;
 	  }
+	  ADC_anterior = ADC_atual;
+	  last_time_ADC = current_time;
+  }
 
-	  if(current_time - last_time_ADC > ADC_TIME_DELAY){
-		  if((int) (abs(ADC_atual - ADC_anterior)) > MAX_ADC_VARIATION){
-			  safety_flag = 1;
-			  fast_movment_flag = 1;
-		  }
-		  ADC_anterior = ADC_atual;
-		  last_time_ADC = current_time;
-	  }
+  if(safety_flag){
+	  htim1.Instance->CCR2=0;
+	  htim1.Instance->CCR1=0;
+	  HAL_Delay(20);
+	  HAL_GPIO_WritePin(en1_GPIO_Port, en1_Pin, GPIO_PIN_SET);
+	  HAL_GPIO_WritePin(en2_GPIO_Port, en2_Pin, GPIO_PIN_SET);
+	  duty_cycle = 0.;
+  }
 
-	  if(safety_flag){
+  if(ADC_atual < ADC_MIN_THR){						
+	  en_increment = 1;									
+	  safety_flag = 0;										
+	  motor_lock_flag = 0;
+	  fast_movment_flag = 0;
+	  motor_low_speed_flag = 0;
+  }
+
+  if(ADC_atual < ADC_MAX_THR - NOISE && !safety_flag){
+	  en_count = 1;
+  }
+
+  if(ADC_atual > ADC_MAX_THR && en_count && !safety_flag){
+	  count = count + 1;									
+	  en_count = 0;											
+  }
+
+
+  if((ADC_atual > maior_valor || (en_increment && ADC_atual > ADC_MIN_THR + NOISE))
+     && !safety_flag){
+	  maior_valor = ADC_atual;
+	  en_increment = 0;
+
+	  conversion = (int) (maior_valor/40.96);
+	  duty_cycle = conversion;
+	  if(sentido_giro == HORARIO){
+		  htim1.Instance->CCR1=conversion;
 		  htim1.Instance->CCR2=0;
+	  }
+	  if(sentido_giro == ANTIHORARIO){
 		  htim1.Instance->CCR1=0;
-		  HAL_Delay(20);
-		  HAL_GPIO_WritePin(en1_GPIO_Port, en1_Pin, GPIO_PIN_SET);
-		  HAL_GPIO_WritePin(en2_GPIO_Port, en2_Pin, GPIO_PIN_SET);
-		  duty_cycle = 0.;
+		  htim1.Instance->CCR2=conversion;
 	  }
+  }
 
-	  if(ADC_atual < ADC_MIN_THR){						
-		  en_increment = 1;									
-		  safety_flag = 0;										
-		  motor_lock_flag = 0;
-		  fast_movment_flag = 0;
-		  motor_low_speed_flag = 0;
+  if(count>=2){                // Inverte sentido de giro
+	  htim1.Instance->CCR1=0;
+	  htim1.Instance->CCR2=0;
+	  HAL_Delay(300);
+	  HAL_GPIO_WritePin(en1_GPIO_Port, en1_Pin, GPIO_PIN_SET);
+	  HAL_GPIO_WritePin(en2_GPIO_Port, en2_Pin, GPIO_PIN_SET);
+	  HAL_Delay(300);
+	  count = 0;
+	  sentido_giro=sentido_giro * -1;
+  }
+
+  if(sentido_giro == HORARIO && !safety_flag){
+	  HAL_GPIO_WritePin(en1_GPIO_Port, en1_Pin, GPIO_PIN_SET);
+	  HAL_GPIO_WritePin(en2_GPIO_Port, en2_Pin, GPIO_PIN_RESET);
+  }
+
+  if(sentido_giro == ANTIHORARIO && !safety_flag){
+	  HAL_GPIO_WritePin(en1_GPIO_Port, en1_Pin, GPIO_PIN_RESET);
+	  HAL_GPIO_WritePin(en2_GPIO_Port, en2_Pin, GPIO_PIN_SET);
+  }
+
+  if(current_time - last_time_LCD > LCD_TIME_DELAY){
+	  lcd_clear();
+	  if(motor_lock_flag){
+		  lcd_gotoxy(0,0);
+		  lcd_printf("MOTOR TRAVADO");
+		  lcd_gotoxy(0,1);
+		  lcd_printf("Retorne a inicio");
 	  }
-
-	  if(ADC_atual < ADC_MAX_THR - NOISE && !safety_flag){
-		  en_count = 1;
+	  else if(fast_movment_flag){
+		  lcd_gotoxy(0,0);
+		  lcd_printf("MOVIMENTO RAPIDO");
+		  lcd_gotoxy(0,1);
+		  lcd_printf("Retorne a inicio");
 	  }
-
-	  if(ADC_atual > ADC_MAX_THR && en_count && !safety_flag){
-		  count = count + 1;									
-		  en_count = 0;											
+	  else{
+		  lcd_gotoxy(0,0);
+		  lcd_printf("(%c)RPM: %0.0f ",(sentido_giro == 1) ? 'H':'A' ,RPM);
+		  lcd_gotoxy(0,1);
+		  lcd_printf("Ciclo T.: %0.1f %%", duty_cycle);
 	  }
-
-
-	  if((ADC_atual > maior_valor || (en_increment && ADC_atual > ADC_MIN_THR + NOISE))
-             && !safety_flag){
-		  maior_valor = ADC_atual;
-		  en_increment = 0;
-
-		  conversion = (int) (maior_valor/40.96);
-		  duty_cycle = conversion;
-		  if(sentido_giro == HORARIO){
-			  htim1.Instance->CCR1=conversion;
-			  htim1.Instance->CCR2=0;
-		  }
-		  if(sentido_giro == ANTIHORARIO){
-			  htim1.Instance->CCR1=0;
-			  htim1.Instance->CCR2=conversion;
-		  }
-	  }
-
-	  if(count>=2){                // Inverte sentido de giro
-		  htim1.Instance->CCR1=0;
-		  htim1.Instance->CCR2=0;
-		  HAL_Delay(300);
-		  HAL_GPIO_WritePin(en1_GPIO_Port, en1_Pin, GPIO_PIN_SET);
-		  HAL_GPIO_WritePin(en2_GPIO_Port, en2_Pin, GPIO_PIN_SET);
-		  HAL_Delay(300);
-		  count = 0;
-		  sentido_giro=sentido_giro * -1;
-	  }
-
-	  if(sentido_giro == HORARIO && !safety_flag){
-		  HAL_GPIO_WritePin(en1_GPIO_Port, en1_Pin, GPIO_PIN_SET);
-		  HAL_GPIO_WritePin(en2_GPIO_Port, en2_Pin, GPIO_PIN_RESET);
-	  }
-
-	  if(sentido_giro == ANTIHORARIO && !safety_flag){
-		  HAL_GPIO_WritePin(en1_GPIO_Port, en1_Pin, GPIO_PIN_RESET);
-		  HAL_GPIO_WritePin(en2_GPIO_Port, en2_Pin, GPIO_PIN_SET);
-	  }
-
-	  if(current_time - last_time_LCD > LCD_TIME_DELAY){
-		  lcd_clear();
-		  if(motor_lock_flag){
-			  lcd_gotoxy(0,0);
-			  lcd_printf("MOTOR TRAVADO");
-			  lcd_gotoxy(0,1);
-			  lcd_printf("Retorne a inicio");
-		  }
-		  else if(fast_movment_flag){
-			  lcd_gotoxy(0,0);
-			  lcd_printf("MOVIMENTO RAPIDO");
-			  lcd_gotoxy(0,1);
-			  lcd_printf("Retorne a inicio");
-		  }
-		  else{
-			  lcd_gotoxy(0,0);
-			  lcd_printf("(%c)RPM: %0.0f ",(sentido_giro == 1) ? 'H':'A' ,RPM);
-			  lcd_gotoxy(0,1);
-			  lcd_printf("Ciclo T.: %0.1f %%", duty_cycle);
-		  }
-		  last_time_LCD = HAL_GetTick();
-	  }
+	  last_time_LCD = HAL_GetTick();
+  }
   }
 }
 ```
