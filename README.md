@@ -13,6 +13,8 @@ No projeto em bancada o pedal é simulado através do uso de um potenciômetro.
     - Situações de carga acima do limite (motor travado) devem ser identificadas pelo microcontrolador que deve desligar o motor.
     - Quando o pedal for pressionado rapidamente e por curta extensão o motor deve ser desligado.
     - O motor pode ser re-acionado retornando o potênciometro ao repouso.
+
+ </br></br>
  
 ## Planta do motor CC
 A Figura 1 exibe a planta do motor CC utilizado. Não foi utilizado a planta como um todo, somente o sistema de acionamento que recebe um sinal PWM do microcontrolador, e o encoder.
@@ -24,7 +26,7 @@ Figura 1 - Planta do motor CC.
 
 ![](img/planta.jpg)
 
-</br></br></br>
+</br></br>
 
 ## Acionamento - Ponte H
 Para controlar o motor CC, como é necessário inverter o sentido de giro, fez-se uso do circuito ponte H, exibido pela Figura 2.
@@ -47,7 +49,7 @@ Figura 3 - Ponte H implementada em bancada.
 
 ![](img/ponte.jpg)
 
-</br></br></br>
+</br></br>
 
 ## Display
 Atendendo os requisitos do a velocidade, o sentido de giro (H) para sentido Horário e (A) para Anti-horário são exibidos como mostra Figura 4. Como um extra e para propósitos de debugging, o ciclo de trabalho do PWM que o microcontrolador fornece ao sistema de acionamento também é exibido.
@@ -66,7 +68,7 @@ Figura 5 - Display quando há um problema identificado.
 
 ![](img/disp2.jpg)
 
-</br></br></br>
+</br></br>
 
 ## Programa embarcado
 Toda a lógica necesária para implementar cada um dos requisitos pode ser vista no código fonte presente na <a href="CubeIDE Workspace/Core/Src/main.c" class="image fit">main</a>.
@@ -196,7 +198,7 @@ while (1){
 }
 ```
 
-</br></br></br>
+</br></br>
 
 ## Vídeo demonstração
 Um vídeo que exibe o funcionamento do instrumento, atendendo todos os requisitos, pode ser visto <a href="https://youtu.be/rYY9jYwxjhg" class="image fit">aqui</a>.
