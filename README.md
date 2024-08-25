@@ -70,7 +70,7 @@ Figura 5 - Display quando há um problema identificado.
 
 ## Programa embarcado
 Toda a lógica necesária para implementar cada um dos requisitos pode ser vista no código fonte presente na <a href="CubeIDE Workspace/Core/Src/main.c" class="image fit">main</a>.
-Abaixo é exibido somente o loop de controle presente na main sem comentários para melhorar visualização.
+Abaixo é exibido somente o loop de controle presente na main sem comentários para melhor visualização.
 
 ```
 while (1){
