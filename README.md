@@ -71,7 +71,7 @@ Figura 5 - Display quando há um problema identificado.
 </br></br>
 
 ## Programa embarcado
-Toda a lógica necesária para implementar cada um dos requisitos pode ser vista no código fonte presente na <a href="CubeIDE Workspace/Core/Src/main.c" class="image fit">main</a>.
+Toda a lógica necessária para implementar cada um dos requisitos pode ser vista no código fonte presente na <a href="CubeIDE Workspace/Core/Src/main.c" class="image fit">main</a>.
 Abaixo é exibido somente o loop de controle presente na main sem comentários para melhor visualização.
 
 ```
@@ -202,5 +202,7 @@ while (1){
 
 ## Vídeo demonstração
 Um vídeo que exibe o funcionamento do instrumento, atendendo todos os requisitos, pode ser visto <a href="https://youtu.be/rYY9jYwxjhg" class="image fit">aqui</a>.
+
+
 
 
